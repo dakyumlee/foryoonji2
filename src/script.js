@@ -14,7 +14,7 @@ const firebaseConfig = {
 
 function initFirebase() {
   try {
-    if (typeof firebase !== 'undefined') {
+    if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
       const app = firebase.initializeApp(firebaseConfig);
       messaging = firebase.messaging();
       console.log("Firebase 초기화 성공");
@@ -26,11 +26,13 @@ function initFirebase() {
         
         if (Notification.permission === 'granted') {
           new Notification(title, { 
-            body: body, 
-            icon: 'https://via.placeholder.com/192x192/5b9bd5/ffffff?text=강준' 
+            body: body
           });
         }
       });
+    } else if (firebase.apps.length > 0) {
+      messaging = firebase.messaging();
+      console.log("Firebase 이미 초기화됨");
     } else {
       console.warn("Firebase SDK가 로드되지 않았습니다");
     }
@@ -98,7 +100,7 @@ function detectJealousyTrigger(text) {
   return triggers.some(trigger => text.includes(trigger));
 }
 
-function appendMessage(text, className, replace = false, imageUrl = null) {
+function appendMessage(text, className, replace = false) {
   const chatWindow = document.getElementById("chat-window");
   if (!chatWindow) return;
 
@@ -106,15 +108,7 @@ function appendMessage(text, className, replace = false, imageUrl = null) {
     const lastBot = chatWindow.querySelector(".bubble.bot:last-child");
     if (lastBot) {
       lastBot.innerHTML = "";
-      if (imageUrl) {
-        const img = document.createElement("img");
-        img.src = imageUrl;
-        img.style.maxWidth = "100%";
-        img.style.borderRadius = "8px";
-        lastBot.appendChild(img);
-      } else {
-        lastBot.textContent = text;
-      }
+      lastBot.textContent = text;
       setTimeout(() => {
         chatWindow.scrollTop = chatWindow.scrollHeight;
       }, 100);
@@ -124,23 +118,7 @@ function appendMessage(text, className, replace = false, imageUrl = null) {
 
   const msgDiv = document.createElement("div");
   msgDiv.className = `bubble ${className}`;
-  
-  if (imageUrl) {
-    const img = document.createElement("img");
-    img.src = imageUrl;
-    img.style.maxWidth = "100%";
-    img.style.borderRadius = "8px";
-    msgDiv.appendChild(img);
-    if (text) {
-      const textDiv = document.createElement("div");
-      textDiv.textContent = text;
-      textDiv.style.marginTop = "8px";
-      msgDiv.appendChild(textDiv);
-    }
-  } else {
-    msgDiv.textContent = text;
-  }
-  
+  msgDiv.textContent = text;
   chatWindow.appendChild(msgDiv);
   
   setTimeout(() => {
@@ -310,60 +288,59 @@ function resetChat() {
   }
 }
 
-function selectPhoto() {
-  const photoInput = document.getElementById("photo-input");
-  if (photoInput) {
-    photoInput.click();
-  }
-}
-
-function handlePhotoSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  if (!file.type.startsWith('image/')) {
-    alert('이미지 파일만 선택해주세요!');
-    return;
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    alert('파일 크기는 5MB 이하로 선택해주세요!');
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const imageUrl = e.target.result;
-    sendPhotoMessage(file, imageUrl);
-  };
-  reader.readAsDataURL(file);
-}
-
-async function sendPhotoMessage(file, imageUrl) {
-  if (isProcessing) {
-    console.log("이미 처리 중입니다");
-    return;
-  }
-
-  isProcessing = true;
+function initialize() {
+  console.log("앱 초기화 시작");
   
-  try {
-    appendMessage("", "user", false, imageUrl);
-    
-    messageCount++;
-    localStorage.setItem("kangjoonDiaryCount", messageCount);
+  initFirebase();
+  
+  loadData();
+  
+  const sendBtn = document.getElementById("send-button");
+  const userInput = document.getElementById("user-input");
+  const notifyBtn = document.getElementById("notify-btn");
+  const resetBtn = document.getElementById("reset-btn");
+  
+  if (sendBtn) {
+    sendBtn.addEventListener("click", sendMessage);
+    console.log("전송 버튼 리스너 등록");
+  }
+  
+  if (userInput) {
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    console.log("입력창 리스너 등록");
+  }
+  
+  if (notifyBtn) {
+    notifyBtn.addEventListener("click", () => {
+      sendPushNotification();
+      const dropdown = document.getElementById("dropdown-menu");
+      if (dropdown) dropdown.classList.remove('show');
+    });
+    console.log("알림 버튼 리스너 등록");
+  }
+  
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      resetChat();
+      const dropdown = document.getElementById("dropdown-menu");
+      if (dropdown) dropdown.classList.remove('show');
+    });
+    console.log("초기화 버튼 리스너 등록");
+  }
+  
+  setTimeout(() => {
+    requestPermission();
+  }, 2000);
+  
+  console.log("초기화 완료");
+}
 
-    appendMessage("사진을 보고 있어...", "bot");
-
-    const base64Data = imageUrl.split(',')[1];
-    const mimeType = file.type;
-
-    console.log('사진 API 호출 시작');
-    
-    const apiUrl = window.location.origin + '/api/kangjoon';
-    
-    const response = await fetch(apiUrl, {
-      method: "POST",
+async function sendPushNotification() {method: "POST",
       headers: { 
         "Content-Type": "application/json",
         "Accept": "application/json"

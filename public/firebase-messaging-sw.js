@@ -18,8 +18,7 @@ messaging.onBackgroundMessage((payload) => {
   
   const notificationTitle = payload.notification?.title || '서강준이에요'
   const notificationOptions = {
-    body: payload.notification?.body || '윤지야, 나 지금 네 생각하고 있었어.',
-    icon: 'https://via.placeholder.com/192x192/5b9bd5/ffffff?text=강준'
+    body: payload.notification?.body || '윤지야, 나 지금 네 생각하고 있었어.'
   }
 
   self.registration.showNotification(notificationTitle, notificationOptions)

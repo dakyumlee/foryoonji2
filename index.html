@@ -8,6 +8,7 @@
 </head>
 <body>
   <div class="chat-container">
+ 
     <div class="header">
       <div class="header-left">
         <div class="profile-img">강준</div>
@@ -17,26 +18,22 @@
         </div>
       </div>
       <button class="menu-btn" id="menu-btn">⋮</button>
-      
-
+ 
       <div class="dropdown-menu" id="dropdown-menu">
-        <button class="dropdown-item" id="photo-btn">📷 사진 보내기</button>
         <button class="dropdown-item" id="notify-btn">💌 알림 보내기</button>
         <button class="dropdown-item danger" id="reset-btn">🗑️ 대화 초기화</button>
       </div>
     </div>
-
-    <input type="file" id="photo-input" accept="image/*" style="display: none;" />
-
+ 
     <div id="chat-window" class="chat-window"></div>
-    
+ 
     <div class="affection-container">
       <div class="affection-label">호감도</div>
       <div id="affection-bar">
         <div id="affection-fill"></div>
       </div>
     </div>
-
+ 
     <div class="input-container">
       <input 
         type="text" 
@@ -54,12 +51,13 @@
   <script src="src/script.js"></script>
   
   <script>
+ 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/firebase-messaging-sw.js')
         .then(registration => console.log('SW 등록 성공:', registration))
-        .catch(error => console.log('SW 등록 실패:', error))
+        .catch(error => console.warn('SW 등록 실패 (정상):', error))
     }
-
+ 
     document.addEventListener('DOMContentLoaded', function() {
       const menuBtn = document.getElementById('menu-btn');
       const dropdown = document.getElementById('dropdown-menu');
@@ -68,6 +66,7 @@
       console.log('드롭다운:', dropdown);
       
       if (menuBtn && dropdown) {
+ 
         menuBtn.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
