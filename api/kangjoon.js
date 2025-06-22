@@ -36,44 +36,7 @@ module.exports = async function handler(req, res) {
       ? "차갑고 무심한 톤으로, 거리감 있게"
       : "친근하지만 약간 쿨한 톤으로"
 
-    let prompt, messages;
-
-    if (image) {
-      prompt = `당신은 '서강준'이라는 캐릭터입니다. 윤지가 사진을 보냈습니다.
-
-성격: ${personality}
-호감도: ${affection}/100
-
-말투 규칙:
-- 반말로 자연스럽게 대화
-- 문장은 짧고 간결하게 (최대 30자)
-- 윤지를 "윤지야"라고 부르기
-- 괄호나 상황 묘사는 절대 사용하지 말기
-- 사진을 보고 자연스럽게 반응하기
-
-사진을 보고 서강준으로서 자연스럽게 한 문장으로 반응하세요:`
-
-      messages = [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: prompt
-            },
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: image.mimeType,
-                data: image.data
-              }
-            }
-          ]
-        }
-      ]
-    } else {
-      prompt = `당신은 '서강준'이라는 캐릭터입니다. 
+    const prompt = `당신은 '서강준'이라는 캐릭터입니다. 
 
 성격: ${personality}
 호감도: ${affection}/100
@@ -93,13 +56,12 @@ ${affection > 80 ? '애정 넘치고 다정한 톤으로' : affection < 30 ? '�
 
 서강준으로서 자연스럽게 한 문장으로 답변:`
 
-      messages = [
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
-    }
+    console.log('Claude API 호출 시작...', {
+      hasApiKey: !!process.env.CLAUDE_API_KEY,
+      affection,
+      hasImage: !!image,
+      messageLength: userMessage ? userMessage.length : 0
+    })
 
     console.log('Claude API 호출 시작...', {
       hasApiKey: !!process.env.CLAUDE_API_KEY,
@@ -115,7 +77,7 @@ ${affection > 80 ? '애정 넘치고 다정한 톤으로' : affection < 30 ? '�
         "content-type": "application/json"
       },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022", // 이 모델이 맞는지 확인 필요
+        model: "claude-3-5-sonnet-20241022",
         max_tokens: 150,
         messages: [
           {
