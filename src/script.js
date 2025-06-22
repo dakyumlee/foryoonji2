@@ -98,7 +98,7 @@ function detectJealousyTrigger(text) {
   return triggers.some(trigger => text.includes(trigger));
 }
 
-function appendMessage(text, className, replace = false) {
+function appendMessage(text, className, replace = false, imageUrl = null) {
   const chatWindow = document.getElementById("chat-window");
   if (!chatWindow) return;
 
@@ -106,7 +106,15 @@ function appendMessage(text, className, replace = false) {
     const lastBot = chatWindow.querySelector(".bubble.bot:last-child");
     if (lastBot) {
       lastBot.innerHTML = "";
-      lastBot.textContent = text;
+      if (imageUrl) {
+        const img = document.createElement("img");
+        img.src = imageUrl;
+        img.style.maxWidth = "100%";
+        img.style.borderRadius = "8px";
+        lastBot.appendChild(img);
+      } else {
+        lastBot.textContent = text;
+      }
       setTimeout(() => {
         chatWindow.scrollTop = chatWindow.scrollHeight;
       }, 100);
@@ -116,7 +124,23 @@ function appendMessage(text, className, replace = false) {
 
   const msgDiv = document.createElement("div");
   msgDiv.className = `bubble ${className}`;
-  msgDiv.textContent = text;
+  
+  if (imageUrl) {
+    const img = document.createElement("img");
+    img.src = imageUrl;
+    img.style.maxWidth = "100%";
+    img.style.borderRadius = "8px";
+    msgDiv.appendChild(img);
+    if (text) {
+      const textDiv = document.createElement("div");
+      textDiv.textContent = text;
+      textDiv.style.marginTop = "8px";
+      msgDiv.appendChild(textDiv);
+    }
+  } else {
+    msgDiv.textContent = text;
+  }
+  
   chatWindow.appendChild(msgDiv);
   
   setTimeout(() => {
@@ -286,7 +310,102 @@ function resetChat() {
   }
 }
 
-async function sendPushNotification() {
+function selectPhoto() {
+  const photoInput = document.getElementById("photo-input");
+  if (photoInput) {
+    photoInput.click();
+  }
+}
+
+function handlePhotoSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 선택해주세요!');
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert('파일 크기는 5MB 이하로 선택해주세요!');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const imageUrl = e.target.result;
+    sendPhotoMessage(file, imageUrl);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function sendPhotoMessage(file, imageUrl) {
+  if (isProcessing) {
+    console.log("이미 처리 중입니다");
+    return;
+  }
+
+  isProcessing = true;
+  
+  try {
+    appendMessage("", "user", false, imageUrl);
+    
+    messageCount++;
+    localStorage.setItem("kangjoonDiaryCount", messageCount);
+
+    appendMessage("사진을 보고 있어...", "bot");
+
+    const base64Data = imageUrl.split(',')[1];
+    const mimeType = file.type;
+
+    console.log('사진 API 호출 시작');
+    
+    const apiUrl = window.location.origin + '/api/kangjoon';
+    
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ 
+        userMessage: "사진을 보냈어",
+        affection: affection,
+        image: {
+          data: base64Data,
+          mimeType: mimeType
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API 오류 응답:', errorText);
+      throw new Error(`서버 오류: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('API 응답 데이터:', data);
+    
+    let reply = data.reply || "사진이 잘 안 보여...";
+    
+    if (reply.length > 150) {
+      reply = reply.substring(0, 147) + "...";
+    }
+    
+    const styledReply = wrapKangjoonStyle(reply);
+    
+    appendMessage(styledReply, "bot", true);
+    
+  } catch (error) {
+    console.error("사진 전송 실패:", error);
+    appendMessage("사진을 제대로 못 봤어... 다시 보내줄래?", "bot", true);
+  } finally {
+    isProcessing = false;
+    const photoInput = document.getElementById("photo-input");
+    if (photoInput) photoInput.value = '';
+  }
+}
   const token = localStorage.getItem("fcmToken");
   if (!token) {
     alert("알림 권한을 먼저 허용해주세요!");
@@ -347,6 +466,8 @@ function initialize() {
   const userInput = document.getElementById("user-input");
   const notifyBtn = document.getElementById("notify-btn");
   const resetBtn = document.getElementById("reset-btn");
+  const photoBtn = document.getElementById("photo-btn");
+  const photoInput = document.getElementById("photo-input");
   
   if (sendBtn) {
     sendBtn.addEventListener("click", sendMessage);
@@ -361,6 +482,20 @@ function initialize() {
       }
     });
     console.log("입력창 리스너 등록");
+  }
+  
+  if (photoBtn) {
+    photoBtn.addEventListener("click", () => {
+      selectPhoto();
+      const dropdown = document.getElementById("dropdown-menu");
+      if (dropdown) dropdown.classList.remove('show');
+    });
+    console.log("사진 버튼 리스너 등록");
+  }
+  
+  if (photoInput) {
+    photoInput.addEventListener("change", handlePhotoSelect);
+    console.log("사진 입력 리스너 등록");
   }
   
   if (notifyBtn) {

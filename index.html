@@ -18,14 +18,18 @@
       </div>
       <button class="menu-btn" id="menu-btn">⋮</button>
       
+
       <div class="dropdown-menu" id="dropdown-menu">
+        <button class="dropdown-item" id="photo-btn">📷 사진 보내기</button>
         <button class="dropdown-item" id="notify-btn">💌 알림 보내기</button>
         <button class="dropdown-item danger" id="reset-btn">🗑️ 대화 초기화</button>
       </div>
     </div>
 
-    <div id="chat-window" class="chat-window"></div>
+    <input type="file" id="photo-input" accept="image/*" style="display: none;" />
 
+    <div id="chat-window" class="chat-window"></div>
+    
     <div class="affection-container">
       <div class="affection-label">호감도</div>
       <div id="affection-bar">
