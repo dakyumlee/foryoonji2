@@ -8,14 +8,43 @@
 </head>
 <body>
   <div class="chat-container">
-    <div class="button-group">
-      <button id="notify-btn" class="top-button">강준이한테 알림 보내기</button>
-      <button id="reset-btn" class="top-button">대화 초기화</button>
+    <!-- 헤더 -->
+    <div class="header">
+      <div class="header-left">
+        <div class="profile-img">강준</div>
+        <div class="header-info">
+          <h2>서강준</h2>
+          <p>온라인</p>
+        </div>
+      </div>
+      <button class="menu-btn" id="menu-btn">⋮</button>
+      
+      <!-- 드롭다운 메뉴 -->
+      <div class="dropdown-menu" id="dropdown-menu">
+        <button class="dropdown-item" id="notify-btn">💌 알림 보내기</button>
+        <button class="dropdown-item danger" id="reset-btn">🗑️ 대화 초기화</button>
+      </div>
     </div>
+
+    <!-- 채팅창 -->
     <div id="chat-window" class="chat-window"></div>
-    <div id="affection-bar"><div id="affection-fill"></div></div>
+    
+    <!-- 호감도 바 -->
+    <div class="affection-container">
+      <div class="affection-label">호감도</div>
+      <div id="affection-bar">
+        <div id="affection-fill"></div>
+      </div>
+    </div>
+
+    <!-- 입력창 -->
     <div class="input-container">
-      <input type="text" id="user-input" placeholder="윤지야, 뭐라도 말해봐" style="font-family: 'YESMyoungjo-Regular';" />
+      <input 
+        type="text" 
+        id="user-input" 
+        placeholder="메시지를 입력하세요..." 
+        style="font-family: 'YESMyoungjo-Regular';" 
+      />
       <button id="send-button">➤</button>
     </div>
   </div>
@@ -31,6 +60,21 @@
         .then(registration => console.log('SW 등록 성공:', registration))
         .catch(error => console.log('SW 등록 실패:', error))
     }
+
+    document.getElementById('menu-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const dropdown = document.getElementById('dropdown-menu');
+      dropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', function() {
+      const dropdown = document.getElementById('dropdown-menu');
+      dropdown.classList.remove('show');
+    });
+
+    document.getElementById('dropdown-menu').addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
   </script>
 </body>
 </html>
