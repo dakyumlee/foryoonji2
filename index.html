@@ -8,7 +8,10 @@
 </head>
 <body>
   <div class="chat-container">
-    <button id="notify-btn">강준이한테 알림 보내기</button>
+    <div class="button-group">
+      <button id="notify-btn" class="top-button">강준이한테 알림 보내기</button>
+      <button id="reset-btn" class="top-button">대화 초기화</button>
+    </div>
     <div id="chat-window" class="chat-window"></div>
     <div id="affection-bar"><div id="affection-fill"></div></div>
     <div class="input-container">
@@ -20,7 +23,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
   
-  <script src="./src/script.js"></script>
+  <script src="script.js"></script>
   
   <script>
     if ('serviceWorker' in navigator) {

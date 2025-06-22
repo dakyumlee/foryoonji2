@@ -1,8 +1,9 @@
-let affection = parseInt(localStorage.getItem("kangjoonAffection")) || 50
+parseInt(localStorage.getItem("kangjoonAffection")) || 50
 let messageCount = parseInt(localStorage.getItem("kangjoonDiaryCount")) || 0
 let messaging = null
-let isProcessing = false  
- 
+let isProcessing = false 
+
+
 const firebaseConfig = {
   apiKey: "AIzaSyAffa3Sfiw_3lvxELmgRN_CpOCvnQI6T-M",
   authDomain: "forseoyoonji.firebaseapp.com",
@@ -11,19 +12,19 @@ const firebaseConfig = {
   messagingSenderId: "431982518010",
   appId: "1:431982518010:web:93b8da97494c1edb21b343"
 }
- 
+
 function initFirebase() {
   try {
     if (typeof firebase !== 'undefined') {
       const app = firebase.initializeApp(firebaseConfig)
       messaging = firebase.messaging()
       console.log("✅ Firebase 초기화 성공")
- 
+
       messaging.onMessage((payload) => {
         console.log("📥 메시지 수신:", payload)
         const title = payload?.notification?.title || "강준이의 메세지"
         const body = payload?.notification?.body || "새 메시지가 도착했어요"
- 
+
         if (Notification.permission === 'granted') {
           new Notification(title, { body, icon: 'https://via.placeholder.com/192x192/5b9bd5/ffffff?text=강준' })
         }
@@ -35,7 +36,7 @@ function initFirebase() {
     console.error("❌ Firebase 초기화 실패:", error)
   }
 }
- 
+
 function requestPermission() {
   if (!messaging) {
     console.warn("Firebase messaging이 준비되지 않았습니다")
@@ -63,7 +64,7 @@ function requestPermission() {
   })
 }
 
- 
+
 function updateAffection(userInput) {
   const positiveWords = ["보고", "좋아", "그리웠", "기다렸", "행복", "고마워", "사랑"]
   const negativeWords = ["짜증", "귀찮", "싫어", "안돼", "그만", "화나"]
@@ -83,7 +84,7 @@ function updateAffection(userInput) {
   }
 }
 
- 
+
 function updateAffectionBar() {
   const fillElement = document.getElementById("affection-fill")
   if (fillElement) {
@@ -92,33 +93,39 @@ function updateAffectionBar() {
   }
 }
 
- 
+
 function detectJealousyTrigger(text) {
   const triggers = ["다른 남자", "잘생긴", "썸", "영화", "데이트", "남사친", "오빠"]
   return triggers.some(trigger => text.includes(trigger))
 }
- 
+
+
 function appendMessage(text, className, replace = false) {
   const chatWindow = document.getElementById("chat-window")
   if (!chatWindow) return
 
   if (replace) {
- 
+
     const lastBot = chatWindow.querySelector(".bubble.bot:last-child")
     if (lastBot) {
+      lastBot.innerHTML = "" 
       lastBot.textContent = text
+
+      setTimeout(() => {
+        chatWindow.scrollTop = chatWindow.scrollHeight
+      }, 100)
       return
     }
   }
 
   const msgDiv = document.createElement("div")
   msgDiv.className = `bubble ${className}`
-  msgDiv.textContent = text 
+  msgDiv.textContent = text
   chatWindow.appendChild(msgDiv)
 
   setTimeout(() => {
     chatWindow.scrollTop = chatWindow.scrollHeight
-  }, 50)
+  }, 150)
 }
 
 function wrapKangjoonStyle(text) {
@@ -159,6 +166,7 @@ async function sendMessage() {
   isProcessing = true
   
   try {
+
     appendMessage(message, "user")
     input.value = ""
 
@@ -167,6 +175,7 @@ async function sendMessage() {
     
     messageCount++
     localStorage.setItem("kangjoonDiaryCount", messageCount)
+
 
     if (detectJealousyTrigger(message)) {
       appendMessage("…그래. 너 마음대로 해. (시선 피한다)", "bot")
@@ -188,7 +197,7 @@ async function sendMessage() {
 
     const data = await response.json()
     let reply = data.reply || "…뭔가 말이 안 나와."
-  
+ 
     if (reply.length > 150) {
       reply = reply.substring(0, 147) + "..."
     }
@@ -196,6 +205,7 @@ async function sendMessage() {
     const styledReply = wrapKangjoonStyle(reply)
 
     appendMessage(styledReply, "bot", true)
+
 
     checkSpecialEvents(message)
     
@@ -206,6 +216,7 @@ async function sendMessage() {
     isProcessing = false
   }
 }
+
 
 function checkSpecialEvents(userInput) {
 
@@ -223,12 +234,37 @@ function checkSpecialEvents(userInput) {
   }
 }
 
-
 function writeJealousDiary() {
   appendMessage("오늘 윤지가 다른 사람 얘기를 했다. 괜히 마음이 복잡하다.", "bot")
 }
 
-async function sendPushNotification() {
+
+function resetChat() {
+  if (confirm("정말로 대화를 초기화할까요? 모든 대화 내용과 호감도가 리셋됩니다.")) {
+    localStorage.removeItem("kangjoonChat")
+    localStorage.removeItem("kangjoonAffection")
+    localStorage.removeItem("kangjoonDiaryCount")
+    localStorage.removeItem("kangjoonDiaryShown")
+    
+  
+    affection = 50
+    messageCount = 0
+    
+    const chatWindow = document.getElementById("chat-window")
+    if (chatWindow) {
+      chatWindow.innerHTML = ""
+    }
+    
+    updateAffectionBar()
+    
+
+    setTimeout(() => {
+      appendMessage("처음부터 다시 시작하는 거야? (조용히 바라본다)", "bot")
+    }, 500)
+    
+    console.log("✅ 대화 초기화 완료")
+  }
+}
   const token = localStorage.getItem("fcmToken")
   if (!token) {
     alert("알림 권한을 먼저 허용해주세요!")
@@ -255,7 +291,6 @@ async function sendPushNotification() {
     console.error("푸시 알림 실패:", error)
     alert("알림 전송에 실패했어...")
   }
-}
 
 function saveData() {
   const chatWindow = document.getElementById("chat-window")
@@ -281,7 +316,6 @@ function loadData() {
 function initialize() {
   console.log("🚀 앱 초기화 시작")
   
-
   initFirebase()
   
   loadData()
@@ -289,6 +323,7 @@ function initialize() {
   const sendBtn = document.getElementById("send-button")
   const userInput = document.getElementById("user-input")
   const notifyBtn = document.getElementById("notify-btn")
+  const resetBtn = document.getElementById("reset-btn")
   
   if (sendBtn) {
     sendBtn.addEventListener("click", sendMessage)
@@ -308,6 +343,11 @@ function initialize() {
   if (notifyBtn) {
     notifyBtn.addEventListener("click", sendPushNotification)
     console.log("✅ 알림 버튼 리스너 등록")
+  }
+  
+  if (resetBtn) {
+    resetBtn.addEventListener("click", resetChat)
+    console.log("✅ 초기화 버튼 리스너 등록")
   }
   
   setTimeout(() => {

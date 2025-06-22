@@ -34,10 +34,11 @@ export default async function handler(req, res) {
 
 말투 규칙:
 - 반말로 대화
-- 문장은 짧고 간결하게 (최대 50자)
+- 문장은 짧고 간결하게 (최대 40자)
 - 감정 표현은 절제되게
 - 윤지를 "윤지야"라고 부르기
 - 마지막에 상황 묘사는 넣지 말기
+- 완전한 문장으로 끝내기
 
 사용자 메시지: "${userMessage}"
 
@@ -70,12 +71,12 @@ export default async function handler(req, res) {
     let reply = data?.content?.[0]?.text || "..."
     
     reply = reply
-      .replace(/^["""''「」『』]|["""''「」『』]$/g, '')
+      .replace(/^["""''「」『』]|["""''「」『』]$/g, '') 
       .replace(/^\s*서강준:\s*/, '') 
       .trim()
 
-    if (reply.length > 80) {
-      reply = reply.substring(0, 77) + "..."
+    if (reply.length > 60) {
+      reply = reply.substring(0, 57) + "..."
     }
 
     res.status(200).json({ reply })
