@@ -1,9 +1,5 @@
 import { requestPermission } from "./firebase.js"
 
-window.onload = function () {
-  requestPermission()
-}
-
 let affection = parseInt(localStorage.getItem("kangjoonAffection")) || 50
 let messageCount = parseInt(localStorage.getItem("kangjoonDiaryCount")) || 0
 
@@ -22,41 +18,12 @@ function updateAffectionBar() {
   document.getElementById("affection-fill").style.width = `${affection}%`
 }
 
-document.getElementById("send-button").addEventListener("click", sendMessage)
-document.getElementById("user-input").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") sendMessage()
-})
-
-document.getElementById("notify-btn").addEventListener("click", async () => {
-  const token = localStorage.getItem("fcmToken")
-  if (!token) {
-    alert("먼저 알림 권한을 허용하고 토큰을 받아야 해!")
-    return
-  }
-
-  const res = await fetch("/api/push", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      token,
-      title: "서강준이에요",
-      body: "윤지야, 나 지금 네 생각하고 있었어."
-    })
-  })
-
-  const result = await res.json()
-  console.log("푸시 전송 결과:", result)
-})
-
 function detectJealousyTrigger(text) {
   const jealousyTriggers = [
     "다른 남자", "잘생긴", "썸", "영화 봤어", "데이트", "남사친", "오빠", "톡 했어"
   ]
   return jealousyTriggers.some(trigger => text.includes(trigger))
 }
-
 
 function appendMessage(text, className) {
   const chatWindow = document.getElementById("chat-window")
@@ -99,15 +66,20 @@ async function sendMessage() {
     const reply = data.reply || "…뭔가 이상한데?"
     const final = wrapKangjoonStyle(reply)
     const lastBubble = document.querySelector(".bubble.bot:last-of-type")
-    lastBubble.innerText = final
+    if (lastBubble) {
+      lastBubble.innerText = final
+    }
 
     checkSecretRoute(message)
     maybeShowDiary()
   } catch (e) {
-    console.error(e)
+    console.error("API 요청 실패:", e)
+    const lastBubble = document.querySelector(".bubble.bot:last-of-type")
+    if (lastBubble) {
+      lastBubble.innerText = "지금 생각이 복잡해... 다시 말해줄래?"
+    }
   }
 }
-
 
 function wrapKangjoonStyle(text) {
   const softEndings = affection > 80
@@ -123,7 +95,7 @@ function wrapKangjoonStyle(text) {
     .replace(/\.{3}/g, "…")
     .replace(/(.)$/, "$1.")
 
-  return `${revised} ${randomEnding}`
+  return `${revised}${randomEnding}`
 }
 
 function maybeShowDiary() {
@@ -147,21 +119,60 @@ function writeJealousDiary() {
   }, 2000)
 }
 
+async function handleNotifyClick() {
+  const token = localStorage.getItem("fcmToken")
+  if (!token) {
+    alert("먼저 알림 권한을 허용하고 토큰을 받아야 해!")
+    return
+  }
 
-window.onload = function() {
-  const saved = localStorage.getItem("kangjoonChat")
-  if (saved) document.getElementById("chat-window").innerHTML = saved
-  updateAffectionBar()
+  try {
+    const res = await fetch("/api/push", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        token,
+        title: "서강준이에요",
+        body: "윤지야, 나 지금 네 생각하고 있었어."
+      })
+    })
+
+    const result = await res.json()
+    console.log("푸시 전송 결과:", result)
+    
+    if (result.success !== undefined && result.success === 0) {
+      alert("알림이 전송되었어!")
+    }
+  } catch (error) {
+    console.error("푸시 전송 실패:", error)
+    alert("알림 전송에 실패했어...")
+  }
 }
 
-window.onbeforeunload = function() {
+document.addEventListener('DOMContentLoaded', function() {
+
+  requestPermission()
+  
+  const saved = localStorage.getItem("kangjoonChat")
+  if (saved) {
+    document.getElementById("chat-window").innerHTML = saved
+  }
+  
+  updateAffectionBar()
+  
+  document.getElementById("send-button").addEventListener("click", sendMessage)
+  document.getElementById("user-input").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      sendMessage()
+    }
+  })
+  document.getElementById("notify-btn").addEventListener("click", handleNotifyClick)
+})
+
+window.addEventListener('beforeunload', function() {
   localStorage.setItem("kangjoonChat", document.getElementById("chat-window").innerHTML)
   localStorage.setItem("kangjoonAffection", affection)
   localStorage.setItem("kangjoonDiaryCount", messageCount)
-}
-
-import { requestPermission } from "./firebase.js"
-
-window.onload = function () {
-  requestPermission("BEz4YzYB5mGCgJK8TuvgNL9xxeRriuzfMT78iAEKZCG-ZDUqBJO2UTaWdYVvNTocqIc8yLLY0xHcNrmckrCAqLE")
-}
+})
