@@ -1,4 +1,5 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -81,12 +82,12 @@ export default async function handler(req, res) {
     const data = await response.json()
     let reply = data?.content?.[0]?.text || "..."
     
- 
+
     reply = reply
-      .replace(/^["""''「」『』]|["""''「」『』]$/g, '') 
-      .replace(/^\s*서강준:\s*/, '') 
+      .replace(/^["""''「」『』]|["""''「」『』]$/g, '')
+      .replace(/^\s*서강준:\s*/, '')
       .trim()
-    
+
     if (reply.length > 60) {
       reply = reply.substring(0, 57) + "..."
     }
@@ -97,7 +98,6 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('API Error:', error)
     
-
     const affection = req.body?.affection || 50
     const fallbackReplies = affection > 80
       ? ["그래, 윤지야.", "응, 알겠어.", "괜찮아."]

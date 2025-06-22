@@ -1,20 +1,7 @@
 {
     "functions": {
-      "api/kangjoon.js": {
-        "runtime": "@vercel/node"
-      },
-      "api/push.js": {
+      "api/*.js": {
         "runtime": "@vercel/node"
       }
-    },
-    "routes": [
-      {
-        "src": "/api/kangjoon",
-        "dest": "/api/kangjoon.js"
-      },
-      {
-        "src": "/api/push", 
-        "dest": "/api/push.js"
-      }
-    ]
+    }
   }
