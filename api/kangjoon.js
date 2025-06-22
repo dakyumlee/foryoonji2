@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   
   if (req.method === 'OPTIONS') {
@@ -18,6 +18,14 @@ export default async function handler(req, res) {
     
     if (!userMessage) {
       res.status(400).json({ error: 'Message is required' })
+      return
+    }
+
+    if (!process.env.CLAUDE_API_KEY) {
+      console.error('CLAUDE_API_KEY가 설정되지 않았습니다')
+      const fallbackReplies = ["음... 지금 좀 복잡해.", "잠깐만, 생각 중이야.", "뭐라고 했어?"]
+      const fallback = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)]
+      res.status(200).json({ reply: fallback })
       return
     }
 
@@ -44,6 +52,8 @@ export default async function handler(req, res) {
 
 서강준으로서 자연스럽게 한 문장으로 답변하세요:`
 
+    console.log('Claude API 호출 시작...')
+    
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -64,26 +74,30 @@ export default async function handler(req, res) {
     })
 
     if (!response.ok) {
+      console.error(`Claude API error: ${response.status}`)
       throw new Error(`Claude API error: ${response.status}`)
     }
 
     const data = await response.json()
     let reply = data?.content?.[0]?.text || "..."
     
+ 
     reply = reply
       .replace(/^["""''「」『』]|["""''「」『』]$/g, '') 
       .replace(/^\s*서강준:\s*/, '') 
       .trim()
-
+    
     if (reply.length > 60) {
       reply = reply.substring(0, 57) + "..."
     }
 
+    console.log('Claude API 응답 성공:', reply)
     res.status(200).json({ reply })
     
   } catch (error) {
     console.error('API Error:', error)
     
+
     const affection = req.body?.affection || 50
     const fallbackReplies = affection > 80
       ? ["그래, 윤지야.", "응, 알겠어.", "괜찮아."]
