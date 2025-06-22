@@ -3,7 +3,10 @@
       {
         "src": "/api/kangjoon",
         "dest": "/api/kangjoon.js"
+      },
+      {
+        "src": "/api/push", 
+        "dest": "/api/push.js"
       }
     ]
   }
-  
