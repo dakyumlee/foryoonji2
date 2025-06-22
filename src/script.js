@@ -154,12 +154,19 @@ async function sendMessage() {
   }
 
   const input = document.getElementById("user-input");
-  if (!input) return;
+  if (!input) {
+    console.error("입력창을 찾을 수 없습니다");
+    return;
+  }
   
   const message = input.value.trim();
-  if (!message) return;
+  if (!message) {
+    console.log("빈 메시지입니다");
+    return;
+  }
 
   isProcessing = true;
+  console.log("메시지 전송 시작:", message);
   
   try {
     appendMessage(message, "user");
@@ -180,8 +187,12 @@ async function sendMessage() {
     appendMessage("생각 중이야...", "bot");
 
     console.log('API 호출 시작:', '/api/kangjoon');
+    console.log('전송 데이터:', { userMessage: message, affection: affection });
     
-    const response = await fetch("/api/kangjoon", {
+    const apiUrl = window.location.origin + '/api/kangjoon';
+    console.log('API URL:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -194,6 +205,7 @@ async function sendMessage() {
     });
 
     console.log('응답 상태:', response.status, response.statusText);
+    console.log('응답 헤더:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -218,7 +230,13 @@ async function sendMessage() {
     
   } catch (error) {
     console.error("메시지 전송 실패:", error);
-    appendMessage("지금 머리가 복잡해... 잠깐 후에 다시 말해줄래?", "bot", true);
+    console.error("Error stack:", error.stack);
+    
+    const errorMessage = error.message.includes('fetch') 
+      ? "서버에 연결할 수 없어... 네트워크를 확인해줄래?"
+      : "지금 머리가 복잡해... 잠깐 후에 다시 말해줄래?";
+      
+    appendMessage(errorMessage, "bot", true);
   } finally {
     isProcessing = false;
   }

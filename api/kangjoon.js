@@ -53,7 +53,11 @@ module.exports = async function handler(req, res) {
 
 서강준으로서 자연스럽게 한 문장으로 답변하세요:`
 
-    console.log('Claude API 호출 시작...')
+    console.log('Claude API 호출 시작...', {
+      hasApiKey: !!process.env.CLAUDE_API_KEY,
+      affection,
+      messageLength: userMessage.length
+    })
     
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -74,15 +78,19 @@ module.exports = async function handler(req, res) {
       })
     })
 
+    console.log('Claude API 응답 상태:', response.status)
+
     if (!response.ok) {
-      console.error(`Claude API error: ${response.status}`)
-      throw new Error(`Claude API error: ${response.status}`)
+      const errorText = await response.text()
+      console.error(`Claude API error: ${response.status}`, errorText)
+      throw new Error(`Claude API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
+    console.log('Claude API 원시 응답:', JSON.stringify(data, null, 2))
+    
     let reply = data?.content?.[0]?.text || "..."
     
-
     reply = reply
       .replace(/^["""''「」『』]|["""''「」『』]$/g, '')
       .replace(/^\s*서강준:\s*/, '')
@@ -92,11 +100,12 @@ module.exports = async function handler(req, res) {
       reply = reply.substring(0, 57) + "..."
     }
 
-    console.log('Claude API 응답 성공:', reply)
+    console.log('정리된 응답:', reply)
     res.status(200).json({ reply })
     
   } catch (error) {
-    console.error('API Error:', error)
+    console.error('API Error:', error.message)
+    console.error('Error stack:', error.stack)
     
     const affection = req.body?.affection || 50
     const fallbackReplies = affection > 80
