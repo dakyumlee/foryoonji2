@@ -1,5 +1,58 @@
-import { requestPermission } from "./firebase.js"
+// Firebase 설정
+const firebaseConfig = {
+  apiKey: "AIzaSyAffa3Sfiw_3lvxELmgRN_CpOCvnQI6T-M",
+  authDomain: "forseoyoonji.firebaseapp.com",
+  projectId: "forseoyoonji",
+  storageBucket: "forseoyoonji.firebasestorage.app",
+  messagingSenderId: "431982518010",
+  appId: "1:431982518010:web:93b8da97494c1edb21b343",
+  measurementId: "G-LBD35Z47NB"
+}
 
+// Firebase 초기화
+let app, messaging
+try {
+  app = firebase.initializeApp(firebaseConfig)
+  messaging = firebase.messaging()
+  console.log("Firebase 초기화 성공")
+} catch (error) {
+  console.error("Firebase 초기화 실패:", error)
+}
+
+// 알림 권한 요청 및 토큰 획득
+function requestPermission() {
+  if (!messaging) {
+    console.error("Firebase messaging이 초기화되지 않았습니다")
+    return
+  }
+
+  Notification.requestPermission().then((permission) => {
+    if (permission === "granted") {
+      messaging.getToken({
+        vapidKey: "BEz4YzYB5mGCgJK8TuvgNL9xxeRriuzfMT78iAEKZCG-ZDUqBJO2UTaWdYVvNTocqIc8yLLY0xHcNrmckrCAqLE"
+      })
+      .then((token) => {
+        console.log("FCM Token:", token)
+        localStorage.setItem("fcmToken", token)
+      })
+      .catch((err) => {
+        console.error("토큰 요청 실패", err)
+      })
+    } else {
+      console.warn("알림 권한 거부됨")
+    }
+  })
+}
+
+// 포그라운드 메시지 수신
+if (messaging) {
+  messaging.onMessage((payload) => {
+    console.log("📥 포그라운드 메시지 수신:", payload)
+    alert(payload?.notification?.title || "강준이의 메세지가 도착했어요.")
+  })
+}
+
+// 앱 로직
 let affection = parseInt(localStorage.getItem("kangjoonAffection")) || 50
 let messageCount = parseInt(localStorage.getItem("kangjoonDiaryCount")) || 0
 
@@ -15,7 +68,10 @@ function updateAffection(userInput) {
 }
 
 function updateAffectionBar() {
-  document.getElementById("affection-fill").style.width = `${affection}%`
+  const fillElement = document.getElementById("affection-fill")
+  if (fillElement) {
+    fillElement.style.width = `${affection}%`
+  }
 }
 
 function detectJealousyTrigger(text) {
@@ -27,6 +83,8 @@ function detectJealousyTrigger(text) {
 
 function appendMessage(text, className) {
   const chatWindow = document.getElementById("chat-window")
+  if (!chatWindow) return
+  
   const msgDiv = document.createElement("div")
   msgDiv.className = `bubble ${className}`
   msgDiv.innerText = text
@@ -36,6 +94,8 @@ function appendMessage(text, className) {
 
 async function sendMessage() {
   const input = document.getElementById("user-input")
+  if (!input) return
+  
   const message = input.value.trim()
   if (!message) return
 
@@ -62,9 +122,14 @@ async function sendMessage() {
       body: JSON.stringify({ userMessage: message })
     })
 
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`)
+    }
+
     const data = await res.json()
     const reply = data.reply || "…뭔가 이상한데?"
     const final = wrapKangjoonStyle(reply)
+    
     const lastBubble = document.querySelector(".bubble.bot:last-of-type")
     if (lastBubble) {
       lastBubble.innerText = final
@@ -119,6 +184,7 @@ function writeJealousDiary() {
   }, 2000)
 }
 
+// 알림 버튼 이벤트
 async function handleNotifyClick() {
   const token = localStorage.getItem("fcmToken")
   if (!token) {
@@ -139,12 +205,13 @@ async function handleNotifyClick() {
       })
     })
 
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`)
+    }
+
     const result = await res.json()
     console.log("푸시 전송 결과:", result)
-    
-    if (result.success !== undefined && result.success === 0) {
-      alert("알림이 전송되었어!")
-    }
+    alert("알림이 전송되었어!")
   } catch (error) {
     console.error("푸시 전송 실패:", error)
     alert("알림 전송에 실패했어...")
@@ -152,27 +219,50 @@ async function handleNotifyClick() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-
-  requestPermission()
+  console.log("DOM 로드 완료")
+  
+  setTimeout(() => {
+    requestPermission()
+  }, 1000)
   
   const saved = localStorage.getItem("kangjoonChat")
   if (saved) {
-    document.getElementById("chat-window").innerHTML = saved
+    const chatWindow = document.getElementById("chat-window")
+    if (chatWindow) {
+      chatWindow.innerHTML = saved
+    }
   }
   
   updateAffectionBar()
   
-  document.getElementById("send-button").addEventListener("click", sendMessage)
-  document.getElementById("user-input").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-      sendMessage()
-    }
-  })
-  document.getElementById("notify-btn").addEventListener("click", handleNotifyClick)
+  const sendButton = document.getElementById("send-button")
+  const userInput = document.getElementById("user-input")
+  const notifyBtn = document.getElementById("notify-btn")
+  
+  if (sendButton) {
+    sendButton.addEventListener("click", sendMessage)
+  }
+  
+  if (userInput) {
+    userInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        sendMessage()
+      }
+    })
+  }
+  
+  if (notifyBtn) {
+    notifyBtn.addEventListener("click", handleNotifyClick)
+  }
+  
+  console.log("이벤트 리스너 등록 완료")
 })
 
 window.addEventListener('beforeunload', function() {
-  localStorage.setItem("kangjoonChat", document.getElementById("chat-window").innerHTML)
+  const chatWindow = document.getElementById("chat-window")
+  if (chatWindow) {
+    localStorage.setItem("kangjoonChat", chatWindow.innerHTML)
+  }
   localStorage.setItem("kangjoonAffection", affection)
   localStorage.setItem("kangjoonDiaryCount", messageCount)
 })

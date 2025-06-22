@@ -1,20 +1,20 @@
 {
-    "name": "서강준봇",
-    "short_name": "강준봇",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#121212",
-    "theme_color": "#5b9bd5",
-    "icons": [
-      {
-        "src": "icon-192.png",
-        "sizes": "192x192",
-        "type": "image/png"
-      },
-      {
-        "src": "icon-512.png",
-        "sizes": "512x512",
-        "type": "image/png"
-      }
-    ]
-  }
+  "name": "서강준봇",
+  "short_name": "강준봇",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#5b9bd5",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/5b9bd5/ffffff?text=강준",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/5b9bd5/ffffff?text=강준",
+      "sizes": "512x512", 
+      "type": "image/png"
+    }
+  ]
+}
