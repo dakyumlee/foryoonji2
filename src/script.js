@@ -379,8 +379,6 @@ async function sendPushNotification() {method: "POST",
     appendMessage("사진을 제대로 못 봤어... 다시 보내줄래?", "bot", true);
   } finally {
     isProcessing = false;
-    const photoInput = document.getElementById("photo-input");
-    if (photoInput) photoInput.value = '';
   }
 }
   const token = localStorage.getItem("fcmToken");
