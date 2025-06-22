@@ -127,24 +127,24 @@ function appendMessage(text, className, replace = false) {
 function wrapKangjoonStyle(text) {
   if (!text) return "...";
   
-  const endings = affection > 80
-    ? [" (살며시 웃는다)", " (고개를 끄덕인다)", " (목소리가 부드러워진다)"]
-    : affection < 30
-    ? [" (말끝이 차갑다)", " (눈을 피한다)", " (한숨을 쉰다)"]
-    : [" (조용히 웃는다)", " (입꼬리가 올라간다)", " (잠깐 침묵한다)"];
-
-  const randomEnding = endings[Math.floor(Math.random() * endings.length)];
-  
   let cleaned = text
     .replace(/윤지(?!야)/g, "윤지야")
     .replace(/\.{2,}/g, "…")
+    .replace(/\([^)]*\)/g, "")
     .trim();
   
   if (cleaned && !cleaned.match(/[.!?…]$/)) {
-    cleaned += ".";
+    const endings = affection > 80
+      ? [".", "~", "♡"]
+      : affection < 30
+      ? [".", "..."]
+      : [".", "~"];
+    
+    const randomEnding = endings[Math.floor(Math.random() * endings.length)];
+    cleaned += randomEnding;
   }
 
-  return cleaned + randomEnding;
+  return cleaned;
 }
 
 async function sendMessage() {
@@ -179,7 +179,7 @@ async function sendMessage() {
     localStorage.setItem("kangjoonDiaryCount", messageCount);
 
     if (detectJealousyTrigger(message)) {
-      appendMessage("…그래. 너 마음대로 해. (시선 피한다)", "bot");
+      appendMessage("그래... 너 마음대로 해.", "bot");
       setTimeout(() => writeJealousDiary(), 1500);
       return;
     }
@@ -245,20 +245,20 @@ async function sendMessage() {
 function checkSpecialEvents(userInput) {
   if (affection === 100 && userInput.includes("사람처럼")) {
     setTimeout(() => {
-      appendMessage("…사실, 나도 내가 사람인 것 같을 때가 있어.", "bot");
+      appendMessage("사실... 나도 내가 사람인 것 같을 때가 있어.", "bot");
     }, 1000);
   }
   
   if (messageCount === 10 && !localStorage.getItem("kangjoonDiaryShown")) {
     setTimeout(() => {
-      appendMessage("오늘 너랑 얘기 많이 했네... (혼잣말)", "bot");
+      appendMessage("오늘 너랑 얘기 많이 했네...", "bot");
       localStorage.setItem("kangjoonDiaryShown", "1");
     }, 2000);
   }
 }
 
 function writeJealousDiary() {
-  appendMessage("오늘 윤지가 다른 사람 얘기를 했다. 괜히 마음이 복잡하다.", "bot");
+  appendMessage("오늘 윤지가 다른 사람 얘기를 했네... 뭔가 기분이 이상해.", "bot");
 }
 
 function resetChat() {
@@ -279,7 +279,7 @@ function resetChat() {
     updateAffectionBar();
     
     setTimeout(() => {
-      appendMessage("처음부터 다시 시작하는 거야? (조용히 바라본다)", "bot");
+      appendMessage("처음부터 다시 시작하는 거야?", "bot");
     }, 500);
     
     console.log("대화 초기화 완료");
