@@ -1,0 +1,26 @@
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>서강준봇</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+    }
+  </script>
+</head>
+<body>
+  <div class="chat-container">
+    <button id="notify-btn">강준이한테 알림 보내기</button>
+    <div id="chat-window" class="chat-window"></div>
+    <div id="affection-bar"><div id="affection-fill"></div></div>
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="윤지야, 뭐라도 말해봐" style="font-family: 'YESMyoungjo-Regular';" />
+      <button id="send-button">➤</button>
+    </div>
+  </div>
+  <script type="module" src="./src/script.js"></script>
+</body>
+</html>

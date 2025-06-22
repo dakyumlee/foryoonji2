@@ -1,0 +1,96 @@
+@font-face {
+    font-family: 'YESMyoungjo-Regular';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_13@1.0/YESMyoungjo-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'YESMyoungjo-Regular';
+    background-color: #121212;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  button {
+    font-family: 'YESMyoungjo-Regular';
+  }
+
+  .chat-container {
+    width: 90%;
+    max-width: 500px;
+    background: #2b2b2b;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  }
+  
+  .chat-window {
+    height: 400px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .input-container {
+    display: flex;
+    gap: 10px;
+  }
+  
+  #user-input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: #444;
+    color: white;
+    font-size: 14px;
+  }
+  
+  #send-button {
+    padding: 10px 14px;
+    border: none;
+    background: #5b9bd5;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .bubble.user {
+    align-self: flex-end;
+    background: #5b9bd5;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 80%;
+  }
+  
+  .bubble.bot {
+    align-self: flex-start;
+    background: #3d3d3d;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 80%;
+  }
+  
+  #affection-bar {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  
+  #affection-fill {
+    height: 100%;
+    background: #5b9bd5;
+    width: 50%;
+  }

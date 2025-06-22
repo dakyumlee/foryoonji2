@@ -1,0 +1,9 @@
+{
+    "routes": [
+      {
+        "src": "/api/kangjoon",
+        "dest": "/api/kangjoon.js"
+      }
+    ]
+  }
+  
