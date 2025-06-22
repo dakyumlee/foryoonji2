@@ -1,15 +1,13 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "api/**/*.js",
-        "use": "@vercel/node"
+    "functions": {
+      "api/kangjoon.js": {
+        "runtime": "@vercel/node"
+      },
+      "api/push.js": {
+        "runtime": "@vercel/node"
+      },
+      "api/test.js": {
+        "runtime": "@vercel/node"
       }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/$1"
-      }
-    ]
+    }
   }
