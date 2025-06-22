@@ -126,6 +126,28 @@ function appendMessage(text, className, replace = false) {
   }, 150);
 }
 
+function appendImageMessage(imageSrc, className) {
+  const chatWindow = document.getElementById("chat-window");
+  if (!chatWindow) return;
+
+  const msgDiv = document.createElement("div");
+  msgDiv.className = `bubble ${className}`;
+  
+  const img = document.createElement("img");
+  img.src = imageSrc;
+  img.style.maxWidth = "200px";
+  img.style.maxHeight = "200px";
+  img.style.borderRadius = "8px";
+  img.style.display = "block";
+  
+  msgDiv.appendChild(img);
+  chatWindow.appendChild(msgDiv);
+  
+  setTimeout(() => {
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }, 150);
+}
+
 function wrapKangjoonStyle(text) {
   if (!text) return "...";
   
@@ -244,6 +266,103 @@ async function sendMessage() {
   }
 }
 
+function selectPhoto() {
+  const photoInput = document.getElementById("photo-input");
+  if (photoInput) {
+    photoInput.click();
+  }
+}
+
+function handlePhotoSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("사진 크기가 너무 커... 5MB 이하로 보내줄래?");
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    alert("이미지 파일만 보낼 수 있어.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const imageSrc = e.target.result;
+
+    appendImageMessage(imageSrc, "user");
+    
+    sendImageToServer(imageSrc, file.type);
+  };
+  
+  reader.readAsDataURL(file);
+
+  event.target.value = '';
+}
+
+async function sendImageToServer(imageSrc, mimeType) {
+  if (isProcessing) return;
+  
+  isProcessing = true;
+  
+  try {
+ 
+    const base64Data = imageSrc.split(',')[1];
+    
+    updateAffection("사진을 보냈어");
+    updateAffectionBar();
+    
+    messageCount++;
+    localStorage.setItem("kangjoonDiaryCount", messageCount);
+
+    appendMessage("사진을 보고 있어...", "bot");
+
+    const apiUrl = window.location.origin + '/api/kangjoon';
+    
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ 
+        userMessage: "사진을 보냈어",
+        affection: affection,
+        image: {
+          data: base64Data,
+          mimeType: mimeType
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API 오류 응답:', errorText);
+      throw new Error(`서버 오류: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('API 응답 데이터:', data);
+    
+    let reply = data.reply || "사진이 잘 안 보여...";
+    
+    if (reply.length > 150) {
+      reply = reply.substring(0, 147) + "...";
+    }
+    
+    const styledReply = wrapKangjoonStyle(reply);
+    
+    appendMessage(styledReply, "bot", true);
+    
+  } catch (error) {
+    console.error("사진 전송 실패:", error);
+    appendMessage("사진을 제대로 못 봤어... 다시 보내줄래?", "bot", true);
+  } finally {
+    isProcessing = false;
+  }
+}
+
 function checkSpecialEvents(userInput) {
   if (affection === 100 && userInput.includes("사람처럼")) {
     setTimeout(() => {
@@ -288,99 +407,7 @@ function resetChat() {
   }
 }
 
-function initialize() {
-  console.log("앱 초기화 시작");
-  
-  initFirebase();
-  
-  loadData();
-  
-  const sendBtn = document.getElementById("send-button");
-  const userInput = document.getElementById("user-input");
-  const notifyBtn = document.getElementById("notify-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  
-  if (sendBtn) {
-    sendBtn.addEventListener("click", sendMessage);
-    console.log("전송 버튼 리스너 등록");
-  }
-  
-  if (userInput) {
-    userInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-    console.log("입력창 리스너 등록");
-  }
-  
-  if (notifyBtn) {
-    notifyBtn.addEventListener("click", () => {
-      sendPushNotification();
-      const dropdown = document.getElementById("dropdown-menu");
-      if (dropdown) dropdown.classList.remove('show');
-    });
-    console.log("알림 버튼 리스너 등록");
-  }
-  
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      resetChat();
-      const dropdown = document.getElementById("dropdown-menu");
-      if (dropdown) dropdown.classList.remove('show');
-    });
-    console.log("초기화 버튼 리스너 등록");
-  }
-  
-  setTimeout(() => {
-    requestPermission();
-  }, 2000);
-  
-  console.log("초기화 완료");
-}
-
-async function sendPushNotification() {method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify({ 
-        userMessage: "사진을 보냈어",
-        affection: affection,
-        image: {
-          data: base64Data,
-          mimeType: mimeType
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API 오류 응답:', errorText);
-      throw new Error(`서버 오류: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log('API 응답 데이터:', data);
-    
-    let reply = data.reply || "사진이 잘 안 보여...";
-    
-    if (reply.length > 150) {
-      reply = reply.substring(0, 147) + "...";
-    }
-    
-    const styledReply = wrapKangjoonStyle(reply);
-    
-    appendMessage(styledReply, "bot", true);
-    
-  } catch (error) {
-    console.error("사진 전송 실패:", error);
-    appendMessage("사진을 제대로 못 봤어... 다시 보내줄래?", "bot", true);
-  } finally {
-    isProcessing = false;
-  }
-}
+async function sendPushNotification() {
   const token = localStorage.getItem("fcmToken");
   if (!token) {
     alert("알림 권한을 먼저 허용해주세요!");

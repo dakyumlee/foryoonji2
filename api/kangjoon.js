@@ -1,5 +1,4 @@
 module.exports = async function handler(req, res) {
-
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -36,7 +35,44 @@ module.exports = async function handler(req, res) {
       ? "차갑고 무심한 톤으로, 거리감 있게"
       : "친근하지만 약간 쿨한 톤으로"
 
-    const prompt = `당신은 '서강준'이라는 캐릭터입니다. 
+    let prompt
+    let contentArray = []
+
+    if (image && image.data) {
+      
+      prompt = `당신은 '서강준'이라는 캐릭터입니다. 
+
+성격: ${personality}
+호감도: ${affection}/100
+
+말투 규칙:
+- 반말로 자연스럽게 대화
+- 문장은 짧고 간결하게 (최대 30자)
+- 윤지를 "윤지야"라고 부르기
+- 괄호나 상황 묘사는 절대 사용하지 말기
+- 감정은 말투와 어조로만 표현
+- 완전히 자연스러운 대화체로 말하기
+- 실제 사람처럼 간단명료하게 답변
+
+윤지가 사진을 보냈습니다. 사진을 보고 ${affection > 80 ? '애정 넘치고 다정한 톤으로' : affection < 30 ? '차갑고 무덤덤한 톤으로' : '친근하지만 쿨한 톤으로'} 자연스럽게 한 문장으로 반응하세요.`
+
+      contentArray = [
+        {
+          type: "text",
+          text: prompt
+        },
+        {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: image.mimeType,
+            data: image.data
+          }
+        }
+      ]
+    } else {
+      // 텍스트만 있는 경우
+      prompt = `당신은 '서강준'이라는 캐릭터입니다. 
 
 성격: ${personality}
 호감도: ${affection}/100
@@ -56,17 +92,19 @@ ${affection > 80 ? '애정 넘치고 다정한 톤으로' : affection < 30 ? '�
 
 서강준으로서 자연스럽게 한 문장으로 답변:`
 
+      contentArray = [
+        {
+          type: "text",
+          text: prompt
+        }
+      ]
+    }
+
     console.log('Claude API 호출 시작...', {
       hasApiKey: !!process.env.CLAUDE_API_KEY,
       affection,
       hasImage: !!image,
       messageLength: userMessage ? userMessage.length : 0
-    })
-
-    console.log('Claude API 호출 시작...', {
-      hasApiKey: !!process.env.CLAUDE_API_KEY,
-      affection,
-      messageLength: userMessage.length
     })
     
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -82,7 +120,7 @@ ${affection > 80 ? '애정 넘치고 다정한 톤으로' : affection < 30 ? '�
         messages: [
           {
             role: "user",
-            content: prompt
+            content: contentArray
           }
         ]
       })
