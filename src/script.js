@@ -347,8 +347,6 @@ function initialize() {
   const userInput = document.getElementById("user-input");
   const notifyBtn = document.getElementById("notify-btn");
   const resetBtn = document.getElementById("reset-btn");
-  const menuBtn = document.getElementById("menu-btn");
-  const dropdown = document.getElementById("dropdown-menu");
   
   if (sendBtn) {
     sendBtn.addEventListener("click", sendMessage);
@@ -368,6 +366,7 @@ function initialize() {
   if (notifyBtn) {
     notifyBtn.addEventListener("click", () => {
       sendPushNotification();
+      const dropdown = document.getElementById("dropdown-menu");
       if (dropdown) dropdown.classList.remove('show');
     });
     console.log("알림 버튼 리스너 등록");
@@ -376,26 +375,10 @@ function initialize() {
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
       resetChat();
+      const dropdown = document.getElementById("dropdown-menu");
       if (dropdown) dropdown.classList.remove('show');
     });
     console.log("초기화 버튼 리스너 등록");
-  }
-  
-  if (menuBtn && dropdown) {
-    menuBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      dropdown.classList.toggle('show');
-    });
-    
-    document.addEventListener("click", () => {
-      dropdown.classList.remove('show');
-    });
-    
-    dropdown.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
-    
-    console.log("메뉴 버튼 리스너 등록");
   }
   
   setTimeout(() => {

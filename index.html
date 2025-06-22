@@ -8,7 +8,6 @@
 </head>
 <body>
   <div class="chat-container">
-    <!-- 헤더 -->
     <div class="header">
       <div class="header-left">
         <div class="profile-img">강준</div>
@@ -19,17 +18,14 @@
       </div>
       <button class="menu-btn" id="menu-btn">⋮</button>
       
-      <!-- 드롭다운 메뉴 -->
       <div class="dropdown-menu" id="dropdown-menu">
         <button class="dropdown-item" id="notify-btn">💌 알림 보내기</button>
         <button class="dropdown-item danger" id="reset-btn">🗑️ 대화 초기화</button>
       </div>
     </div>
 
-    <!-- 채팅창 -->
     <div id="chat-window" class="chat-window"></div>
-    
-    <!-- 호감도 바 -->
+
     <div class="affection-container">
       <div class="affection-label">호감도</div>
       <div id="affection-bar">
@@ -37,7 +33,6 @@
       </div>
     </div>
 
-    <!-- 입력창 -->
     <div class="input-container">
       <input 
         type="text" 
@@ -61,19 +56,35 @@
         .catch(error => console.log('SW 등록 실패:', error))
     }
 
-    document.getElementById('menu-btn').addEventListener('click', function(e) {
-      e.stopPropagation();
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuBtn = document.getElementById('menu-btn');
       const dropdown = document.getElementById('dropdown-menu');
-      dropdown.classList.toggle('show');
-    });
+      
+      console.log('메뉴 버튼:', menuBtn);
+      console.log('드롭다운:', dropdown);
+      
+      if (menuBtn && dropdown) {
+        menuBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('메뉴 버튼 클릭됨');
+          dropdown.classList.toggle('show');
+        });
 
-    document.addEventListener('click', function() {
-      const dropdown = document.getElementById('dropdown-menu');
-      dropdown.classList.remove('show');
-    });
+        document.addEventListener('click', function(e) {
+          if (!dropdown.contains(e.target) && !menuBtn.contains(e.target)) {
+            dropdown.classList.remove('show');
+          }
+        });
 
-    document.getElementById('dropdown-menu').addEventListener('click', function(e) {
-      e.stopPropagation();
+        dropdown.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+        
+        console.log('드롭다운 이벤트 리스너 등록 완료');
+      } else {
+        console.error('메뉴 버튼 또는 드롭다운을 찾을 수 없습니다');
+      }
     });
   </script>
 </body>
